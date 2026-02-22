@@ -1,0 +1,19 @@
+rulesets:
+  gw:
+    description: ""
+    branches:
+      - core
+      - stratagems
+      - army
+      - units
+  sf1:
+    description: ""
+    branches:
+      - units
+  sf2:
+    description: ""
+    branches:
+      - core
+      - stratagems
+      - army
+      - units

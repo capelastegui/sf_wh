@@ -1,0 +1,2 @@
+class ArmyCompRulesSf:
+    pass

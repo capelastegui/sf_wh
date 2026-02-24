@@ -1,4 +1,4 @@
 faction,army,unit,model,is_inf,n_models,T,SV,SV_invul,W,FNP,minus_hit,minus_w,D_subtract,D_halve,rr_save
 imperium,Space Marines,Intercessors,,True,1,4,3,,2,,0,0,0,False,False
 imperium,Space Marines,Terminators,,True,1,5,2,4,3,,0,0,0,False,False
-imperium,Space Marines,impulsor,,True,1,9,3,5,10,,0,0,0,False,False
+imperium,Space Marines,Impulsor,,True,1,9,3,5,11,,0,0,0,False,False

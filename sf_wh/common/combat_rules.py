@@ -21,6 +21,25 @@ import pandas as pd
 
 # -- Functions
 
+# ---- Utility functions
+
+def cartesian_product_itertools(*arrays):
+    """Return cartesian product of input arrays as a 2-D numpy array.
+
+    Reference: https://stackoverflow.com/questions/11144513
+    """
+    return np.array(list(itertools.product(*arrays)))
+
+
+def roll_n_dice(dice_size, n_dice):
+    """Return all possible outcomes when rolling n_dice of dice_size."""
+    l_arrays = [list(range(dice_size))] * n_dice
+    return cartesian_product_itertools(*l_arrays)
+    # TO DO: get row sum and aggregate to get probabilities
+
+
+# ---- Attack probabilities
+
 def get_df_atk_matrix(df_atk, df_def):
     """Return attack matrix: cross join of attack and defense stats."""
     df_def_clean = (
@@ -124,20 +143,35 @@ def get_prob_dmg(df_atk_matrix):
         prob_save=df_prob_save['prob_save'],
     )
 
+def _get_avg_d_roll_placeholder(D_fixed,D_n_dice,D_dice_size, W, **kwargs):
+    """Return average damage - simplified calculation"""
+    condlist = [D_dice_size == 6, D_dice_size ==3]
+    choicelist = [3.5, 2.]
+    d_roll = np.select(condlist, choicelist, 0)
+    dmg_uncapped = D_fixed + d_roll * D_n_dice
+    dmg = np.minimum(dmg_uncapped, W)
+    df_result = pd.DataFrame(dict(
+        dmg=dmg, dmg_uncapped=dmg_uncapped
+    ))
+    return df_result
 
-def cartesian_product_itertools(*arrays):
-    """Return cartesian product of input arrays as a 2-D numpy array.
 
-    Reference: https://stackoverflow.com/questions/11144513
-    """
-    return np.array(list(itertools.product(*arrays)))
+def _get_rtk(W, A, dmg, prob_dmg):
+    rtk = W / (A * dmg * prob_dmg)
+    return rtk
+
+def get_rtk(df_atk_matrix):
+    """Return rounds to kill"""
+    df_dmg = _get_avg_d_roll_placeholder(**df_atk_matrix)
+    df_prob_dmg = get_prob_dmg(df_atk_matrix)
+    rtk = _get_rtk(df_atk_matrix['W'], df_atk_matrix['A'], df_dmg['dmg'], df_prob_dmg['prob_dmg'])
+    df_result = pd.DataFrame(dict(rtk=rtk))
+    return df_result
 
 
-def roll_n_dice(dice_size, n_dice):
-    """Return all possible outcomes when rolling n_dice of dice_size."""
-    l_arrays = [list(range(dice_size))] * n_dice
-    return cartesian_product_itertools(*l_arrays)
-    # TO DO: get row sum and aggregate to get probabilities
+
+# ---- Damage calculations
+
 
 
 def roll_D(D_n_dice, D_dice_size):

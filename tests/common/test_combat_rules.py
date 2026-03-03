@@ -18,9 +18,11 @@ from sf_wh.common.combat_rules import (
     get_prob_h,
     get_prob_save,
     get_prob_w,
+    get_rtk,
     process_D,
     roll_D,
     roll_n_dice,
+    _get_avg_d_roll_placeholder
 )
 from sf_wh.common.unit_loader import read_unit_rules, read_unit_weapons
 
@@ -110,6 +112,17 @@ class TestCombatRules(unittest.TestCase):
         self.assertEqual(list(result.columns), ['prob_dmg'])
         log_info('get_prob_dmg', result)
 
+    def test_get_avg_d_roll_placeholder(self):
+        result = _get_avg_d_roll_placeholder(**self.df_atk_matrix)
+        self.assertEqual(len(result), len(self.df_atk_matrix))
+        self.assertEqual(list(result.columns), ['dmg', 'dmg_uncapped'])
+        log_info('get_prob_dmg', result)
+
+    def test_get_rtk(self):
+        result = get_rtk(self.df_atk_matrix)
+        self.assertEqual(len(result), len(self.df_atk_matrix))
+        self.assertEqual(list(result.columns), ['rtk'])
+        log_info('rtk', result)
 
 if __name__ == '__main__':
     unittest.main()

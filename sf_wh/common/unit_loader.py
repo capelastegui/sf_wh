@@ -4,11 +4,15 @@ from pathlib import Path
 import pandas as pd
 
 _RULES_DIR = Path(__file__).parent.parent / 'rules'
+_TEST_DATA_DIR = Path(__file__).parent.parent.parent / 'tests' / 'data'
 
 
 def read_unit_csv(ruleset, file_name):
     """Read a CSV file from [ruleset]/units/ and return a DataFrame."""
-    path = _RULES_DIR / ruleset / 'units' / file_name
+    if ruleset == 'test':
+        path = _TEST_DATA_DIR / 'units' / file_name
+    else:
+        path = _RULES_DIR / ruleset / 'units' / file_name
     return pd.read_csv(path)
 
 

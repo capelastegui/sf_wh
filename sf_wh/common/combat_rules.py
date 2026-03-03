@@ -106,11 +106,22 @@ def get_prob_w(S, anti_inf, anti_tank, rr_wound, bonus_w, T, minus_w, **kwargs):
     return df_result
 
 
-def get_prob_dmg(prob_h, prob_w, prob_save, **kwargs):
+def _get_prob_dmg(prob_h, prob_w, prob_save):
     """Return probability of (hitting AND wounding AND not saving)."""
     prob_dmg = prob_h * prob_w * (1 - prob_save)
-    df_result = pd.DataFrame(dict(prob_dmg=prob_dmg))
-    return df_result
+    return pd.DataFrame(dict(prob_dmg=prob_dmg))
+
+
+def get_prob_dmg(df_atk_matrix):
+    """Return damage probability for each row of an attack matrix DataFrame."""
+    df_prob_h = get_prob_h(**df_atk_matrix)
+    df_prob_w = get_prob_w(**df_atk_matrix)
+    df_prob_save = get_prob_save(**df_atk_matrix)
+    return _get_prob_dmg(
+        prob_h=df_prob_h['prob_h'],
+        prob_w=df_prob_w['prob_w'],
+        prob_save=df_prob_save['prob_save'],
+    )
 
 
 # ---------------------------------------------------------------------------

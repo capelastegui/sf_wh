@@ -1,7 +1,14 @@
-"""Tests for sf_wh.common.unit_loader."""
+"""
+test_unit_loader - Tests for sf_wh.common.unit_loader.
+"""
+
+# -- Public Imports
+
 import unittest
 from pathlib import Path
 from unittest.mock import call, patch
+
+# -- Private Imports
 
 from sf_wh.common.unit_loader import (
     read_unit_csv,
@@ -10,8 +17,9 @@ from sf_wh.common.unit_loader import (
     read_unit_weapons,
 )
 
-_RULES_DIR = Path(__file__).parent.parent.parent / 'sf_wh' / 'rules'
+# -- Globals
 
+_RULES_DIR = Path(__file__).parent.parent.parent / 'sf_wh' / 'rules'
 
 _UNIT_RULES_COLUMNS = [
     'faction', 'army', 'unit', 'model', 'is_inf', 'n_models',
@@ -28,6 +36,9 @@ _UNIT_WEAPONS_COLUMNS = [
     'bonus_hit', 'bonus_w',
 ]
 
+# -- Functions
+
+# -- Classes
 
 class TestReadUnitCsv(unittest.TestCase):
     @patch('sf_wh.common.unit_loader.pd.read_csv')

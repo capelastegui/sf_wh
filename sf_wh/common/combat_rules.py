@@ -1,4 +1,5 @@
-"""wh40k.py - Warhammer 40K combat probability calculations.
+"""
+combat_rules - Warhammer 40K combat probability calculations.
 
 Functions are organised into four areas:
 - Attack matrix construction
@@ -6,15 +7,19 @@ Functions are organised into four areas:
 - Damage dice rolling
 - Sample data helpers
 """
+
+# -- Public Imports
+
 import itertools
 
 import numpy as np
 import pandas as pd
 
+# -- Private Imports
 
-# ---------------------------------------------------------------------------
-# Attack matrix
-# ---------------------------------------------------------------------------
+# -- Globals
+
+# -- Functions
 
 def get_df_atk_matrix(df_atk, df_def):
     """Return attack matrix: cross join of attack and defense stats."""
@@ -29,10 +34,6 @@ def get_df_atk_matrix(df_atk, df_def):
     df_atk_matrix = pd.merge(df_atk, df_def_clean, how='cross')
     return df_atk_matrix
 
-
-# ---------------------------------------------------------------------------
-# Combat probabilities
-# ---------------------------------------------------------------------------
 
 def get_prob_save(is_melee, AP, ignore_cover, SV, SV_invul, rr_save, **kwargs):
     """Return probability of saving, for a series of (attacker, defender)."""
@@ -124,10 +125,6 @@ def get_prob_dmg(df_atk_matrix):
     )
 
 
-# ---------------------------------------------------------------------------
-# Damage dice rolling
-# ---------------------------------------------------------------------------
-
 def cartesian_product_itertools(*arrays):
     """Return cartesian product of input arrays as a 2-D numpy array.
 
@@ -205,4 +202,4 @@ def get_D_out(D_fixed, D_n_dice, D_dice_size, W):
     pass
     # D_capped = np.minimum(D_fixed, W)
 
-
+# -- Classes

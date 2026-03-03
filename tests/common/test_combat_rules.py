@@ -1,14 +1,15 @@
-"""Tests for sf_wh.common.combat_rules."""
+"""
+test_combat_rules - Tests for sf_wh.common.combat_rules.
+"""
+
+# -- Public Imports
+
 import logging
 import unittest
 
 import pandas as pd
 
-logger = logging.getLogger(__name__)
-
-
-def log_info(msg, data):
-    logger.info(msg + '\n' + str(data))
+# -- Private Imports
 
 from sf_wh.common.combat_rules import (
     cartesian_product_itertools,
@@ -23,6 +24,10 @@ from sf_wh.common.combat_rules import (
 )
 from sf_wh.common.unit_loader import read_unit_rules, read_unit_weapons
 
+# -- Globals
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 _ATK_MATRIX_COLUMNS = [
     # from df_atk (unit_weapons)
@@ -38,7 +43,6 @@ _ATK_MATRIX_COLUMNS = [
     'minus_hit', 'minus_w', 'D_subtract', 'D_halve', 'rr_save',
 ]
 
-
 _NAN = float('nan')
 
 _ATK_MATRIX_ROW_BOLT_GUN = {
@@ -51,6 +55,12 @@ _ATK_MATRIX_ROW_BOLT_GUN = {
     'ignore_cover': False, 'rr_hit': False, 'rr_wound': False, 'bonus_hit': 0, 'bonus_w': 0,
 }
 
+# -- Functions
+
+def log_info(msg, data):
+    logger.info(msg + '\n' + str(data))
+
+# -- Classes
 
 class TestCombatRules(unittest.TestCase):
     df_atk = read_unit_weapons('army1', ruleset='test')

@@ -14,15 +14,15 @@ import pandas as pd
 from sf_wh.common.combat_rules import (
     cartesian_product_itertools,
     get_df_atk_matrix,
-    get_prob_dmg,
+    get_w_unsaved_per_a,
     get_prob_h,
     get_prob_save,
     get_prob_w,
-    get_rtk,
+    get_r_to_k,
     process_D,
     roll_D,
     roll_n_dice,
-    _get_avg_d_roll_placeholder
+    get_d_per_w_unsaved
 )
 from sf_wh.common.unit_loader import read_unit_rules, read_unit_weapons
 
@@ -107,22 +107,22 @@ class TestCombatRules(unittest.TestCase):
         log_info('get_prob_w', result)
 
     def test_get_prob_dmg(self):
-        result = get_prob_dmg(self.df_atk_matrix)
+        result = get_w_unsaved_per_a(self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
         self.assertEqual(list(result.columns), ['prob_dmg'])
         log_info('get_prob_dmg', result)
 
     def test_get_avg_d_roll_placeholder(self):
-        result = _get_avg_d_roll_placeholder(**self.df_atk_matrix)
+        result = get_d_per_w_unsaved(**self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
         self.assertEqual(list(result.columns), ['dmg', 'dmg_uncapped'])
         log_info('get_prob_dmg', result)
 
-    def test_get_rtk(self):
-        result = get_rtk(self.df_atk_matrix)
+    def test_get_r_to_k(self):
+        result = get_r_to_k(self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
-        self.assertEqual(list(result.columns), ['rtk'])
-        log_info('rtk', result)
+        self.assertEqual(list(result.columns), ['r_to_k'])
+        log_info('r_to_k', result)
 
 if __name__ == '__main__':
     unittest.main()

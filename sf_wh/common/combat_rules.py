@@ -1,11 +1,45 @@
 """
 combat_rules - Warhammer 40K combat probability calculations.
 
-Functions are organised into four areas:
+Functions are organised into these areas:
+- Utility functions
 - Attack matrix construction
-- Combat probabilities (hit, wound, save, damage)
-- Damage dice rolling
-- Sample data helpers
+- Attack steps
+- Attack outcomes - direct
+- Attack outcomes - Inverse
+- Damage dice rolling (work in progress)
+
+
+These functions are intended to work with pandas dataframe inputs and outputs. 
+However, they should also be able to take scalar inputs
+
+Attack sequence summary:
+- Each attack has an attacker and a defender
+- An attacker has attack stats, a defender has defense stats
+- An attack action has other properties independent of attacker and defender, such as distance
+- We generate an attack matrix, where each row represents an (attacker, defender, attack_properties) tuple
+  that will be used to resolve an attack
+- Each attack goes through the following steps:
+    - in a given round, `r`
+    - determine number of attacks, `a`
+    - determine number of hits, `h`
+      - Includes non-critical hits `h_noncrit` and critical hits `h_crit`
+    - determine number of wounding attacks pre-save, `w`
+      - Includes non-critical wounds `w_noncrit` and critical wounds `w_crit`
+    - determine number of unsaved wounds, `w_unsaved`
+    - determine value of unsaved damage, `d`
+    - evaluate number of target models killed, `k`
+
+
+We have functions to resolve each step in the attack sequence, and also to 
+get the outcome of a series of steps. For example:
+- Kills per round: k_per_r
+- Kills per attack: k_per_a
+- Damage per hit: d_per_h
+
+, as well as the inverse functions:
+- Rounds to kill: r_to_k
+- Hits to wound: h_to_w
 """
 
 # -- Public Imports
@@ -38,7 +72,7 @@ def roll_n_dice(dice_size, n_dice):
     # TO DO: get row sum and aggregate to get probabilities
 
 
-# ---- Attack probabilities
+# ---- Attack matrix construction
 
 def get_df_atk_matrix(df_atk, df_def):
     """Return attack matrix: cross join of attack and defense stats."""
@@ -54,25 +88,27 @@ def get_df_atk_matrix(df_atk, df_def):
     return df_atk_matrix
 
 
-def get_prob_save(is_melee, AP, ignore_cover, SV, SV_invul, rr_save, **kwargs):
-    """Return probability of saving, for a series of (attacker, defender)."""
-    cover_mod = ~is_melee & ~ignore_cover
-    # Min save: 2 if SV is 2, 3 otherwise
-    min_save = SV.mask(SV > 2, 3)
-    sv_modified = (
-        (SV + AP - cover_mod)
-        .pipe(np.maximum, min_save)
-        .pipe(np.minimum, SV_invul.fillna(7).astype(int))
-    )
-    prob_save = (7 - sv_modified) / 6.
+# ---- Attack steps
 
-    # TO DO: Add rr_save
+# TO DO: Add a_extra to attack matrix - for random bonuses
 
-    df_result = pd.DataFrame(dict(
-        cover_mod=cover_mod, min_save=min_save, sv_modified=sv_modified,
-        prob_save=prob_save,
-    ))
-    return df_result
+
+def get_a_blast(blast, n_models, **kwargs):
+    """Get number of extra attacks from Blast ability"""
+    a_blast = blast * (n_models % 5)
+    return a_blast
+
+
+def get_a_rapid_fire(rapid_fire, is_half_range, **kwargs):
+    """Get number of extra attacks from rapid fire"""
+    a_rapid_fire = rapid_fire * is_half_range
+    return a_rapid_fire
+
+
+def get_a(A, rapid_fire, is_half_range, blast, n_models, **kwargs):
+    """Get number of attacks"""
+    a_total = A + get_a_rapid_fire(rapid_fire, is_half_range) + get_a_blast(blast, n_models)  # +a_extra
+    return a_total
 
 
 def get_prob_h(H, rr_hit, bonus_hit, minus_hit, **kwargs):
@@ -126,24 +162,44 @@ def get_prob_w(S, anti_inf, anti_tank, rr_wound, bonus_w, T, minus_w, **kwargs):
     return df_result
 
 
-def _get_prob_dmg(prob_h, prob_w, prob_save):
-    """Return probability of (hitting AND wounding AND not saving)."""
+def get_prob_save(is_melee, AP, ignore_cover, SV, SV_invul, rr_save, **kwargs):
+    """Return probability of saving, for a series of (attacker, defender)."""
+    cover_mod = ~is_melee & ~ignore_cover
+    # Min save: 2 if SV is 2, 3 otherwise
+    min_save = SV.mask(SV > 2, 3)
+    sv_modified = (
+        (SV + AP - cover_mod)
+        .pipe(np.maximum, min_save)
+        .pipe(np.minimum, SV_invul.fillna(7).astype(int))
+    )
+    prob_save = (7 - sv_modified) / 6.
+
+    # TO DO: Add rr_save
+
+    df_result = pd.DataFrame(dict(
+        cover_mod=cover_mod, min_save=min_save, sv_modified=sv_modified,
+        prob_save=prob_save,
+    ))
+    return df_result
+
+
+def _get_prob_w_unsaved(prob_h, prob_w, prob_save):
+    """
+    Return probability of (hitting AND wounding AND not saving) per attack
+
+    Internal function.
+    """
     prob_dmg = prob_h * prob_w * (1 - prob_save)
     return pd.DataFrame(dict(prob_dmg=prob_dmg))
 
 
-def get_prob_dmg(df_atk_matrix):
-    """Return damage probability for each row of an attack matrix DataFrame."""
-    df_prob_h = get_prob_h(**df_atk_matrix)
-    df_prob_w = get_prob_w(**df_atk_matrix)
-    df_prob_save = get_prob_save(**df_atk_matrix)
-    return _get_prob_dmg(
-        prob_h=df_prob_h['prob_h'],
-        prob_w=df_prob_w['prob_w'],
-        prob_save=df_prob_save['prob_save'],
-    )
 
-def _get_avg_d_roll_placeholder(D_fixed,D_n_dice,D_dice_size, W, **kwargs):
+
+# TO DO: get_d_melta
+# d_melta = melta * is_half_range
+
+
+def get_d_per_w_unsaved(D_fixed,D_n_dice,D_dice_size, W, **kwargs):
     """Return average damage - simplified calculation"""
     condlist = [D_dice_size == 6, D_dice_size ==3]
     choicelist = [3.5, 2.]
@@ -156,22 +212,53 @@ def _get_avg_d_roll_placeholder(D_fixed,D_n_dice,D_dice_size, W, **kwargs):
     return df_result
 
 
-def _get_rtk(W, A, dmg, prob_dmg):
-    rtk = W / (A * dmg * prob_dmg)
-    return rtk
-
-def get_rtk(df_atk_matrix):
-    """Return rounds to kill"""
-    df_dmg = _get_avg_d_roll_placeholder(**df_atk_matrix)
-    df_prob_dmg = get_prob_dmg(df_atk_matrix)
-    rtk = _get_rtk(df_atk_matrix['W'], df_atk_matrix['A'], df_dmg['dmg'], df_prob_dmg['prob_dmg'])
-    df_result = pd.DataFrame(dict(rtk=rtk))
-    return df_result
 
 
 
-# ---- Damage calculations
+# ---- Attack outcomes
 
+# TO DO: get average damage per attack
+# d_per_a = prob_dmg * avg_d_roll
+
+def get_w_unsaved_per_a(df_atk_matrix):
+    """Return probability of unsaved damage per attack"""
+    df_prob_h = get_prob_h(**df_atk_matrix)
+    df_prob_w = get_prob_w(**df_atk_matrix)
+    df_prob_save = get_prob_save(**df_atk_matrix)
+    return _get_prob_w_unsaved(
+        prob_h=df_prob_h['prob_h'],
+        prob_w=df_prob_w['prob_w'],
+        prob_save=df_prob_save['prob_save'],
+    )
+
+def get_d_per_r(df_atk_matrix):
+    a = get_a(**df_atk_matrix)
+    w_unsaved_per_a = get_w_unsaved_per_a(df_atk_matrix)
+    d_per_w = get_d_per_w_unsaved(**df_atk_matrix)
+    d_per_r = a * w_unsaved_per_a * d_per_w
+    return d_per_r
+
+
+def get_r_to_d(df_atk_matrix):
+    return 1/get_d_per_r(df_atk_matrix)
+
+
+def get_d_to_k(d, W):
+    return np.floor(d / W)
+
+
+def get_k_per_r(df_atk_matrix):
+    # TO DO - Review this
+    d_per_r = get_d_per_r(df_atk_matrix)
+    k_per_r = get_d_to_k(d_per_r, W)
+    return k_per_r
+
+
+def get_r_to_k(df_atk_matrix):
+    return 1/get_k_per_r(df_atk_matrix)
+
+ 
+# ---- Damage roll calculations (work in progress)
 
 
 def roll_D(D_n_dice, D_dice_size):
@@ -236,4 +323,4 @@ def get_D_out(D_fixed, D_n_dice, D_dice_size, W):
     pass
     # D_capped = np.minimum(D_fixed, W)
 
-# -- Classes
+

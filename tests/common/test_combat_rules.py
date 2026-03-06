@@ -13,16 +13,25 @@ import pandas as pd
 
 from sf_wh.common.combat_rules import (
     cartesian_product_itertools,
+    get_a,
+    get_a_blast,
+    get_a_rapid_fire,
+    get_d_per_r,
+    get_d_per_w_unsaved,
+    get_d_to_k,
     get_df_atk_matrix,
-    get_w_unsaved_per_a,
+    get_df_atk_report,
     get_prob_h,
     get_prob_save,
     get_prob_w,
+    get_r_to_d,
+    get_w_unsaved_per_a,
+    get_k_per_r,
     get_r_to_k,
     process_D,
     roll_D,
     roll_n_dice,
-    get_d_per_w_unsaved
+    ATK_MATRIX_KEYS
 )
 from sf_wh.common.unit_loader import read_unit_rules, read_unit_weapons
 
@@ -30,6 +39,10 @@ from sf_wh.common.unit_loader import read_unit_rules, read_unit_weapons
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+pd.options.display.max_columns = 100
+pd.options.display.width = 150
+pd.set_option('display.expand_frame_repr', True)
 
 _ATK_MATRIX_COLUMNS = [
     # from df_atk (unit_weapons)
@@ -88,11 +101,28 @@ class TestCombatRules(unittest.TestCase):
         self.assertEqual(list(result.columns), _ATK_MATRIX_COLUMNS)
         log_info('get_df_atk_matrix', result)
 
-    def test_get_prob_save(self):
-        result = get_prob_save(**self.df_atk_matrix)
+    def test_get_df_atk_report(self):
+        result = get_df_atk_report(self.df_atk_matrix, pd.DataFrame(dict(c1=[1,2])))
         self.assertEqual(len(result), len(self.df_atk_matrix))
-        self.assertEqual(list(result.columns), ['cover_mod', 'min_save', 'sv_modified', 'prob_save'])
-        log_info('get_prob_save', result)
+        self.assertEqual(list(result.columns), ATK_MATRIX_KEYS+['c1'])
+        log_info('get_df_atk_matrix', result)
+
+
+    def test_get_a_blast(self):
+        result = get_a_blast(**self.df_atk_matrix)
+        self.assertEqual(len(result), len(self.df_atk_matrix))
+        log_info('get_a_blast', result)
+
+
+    def test_get_a_rapid_fire(self):
+        result = get_a_blast(**self.df_atk_matrix)
+        self.assertEqual(len(result), len(self.df_atk_matrix))
+        log_info('get_a_blast', result)
+
+    def test_get_a(self):
+        result = get_a(**self.df_atk_matrix)
+        self.assertEqual(len(result), len(self.df_atk_matrix))
+        log_info('get_a', result)
 
     def test_get_prob_h(self):
         result = get_prob_h(**self.df_atk_matrix)
@@ -106,22 +136,57 @@ class TestCombatRules(unittest.TestCase):
         self.assertEqual(list(result.columns), ['div_s_t', 'prob_w'])
         log_info('get_prob_w', result)
 
-    def test_get_prob_dmg(self):
+    def test_get_prob_save(self):
+        result = get_prob_save(**self.df_atk_matrix)
+        self.assertEqual(len(result), len(self.df_atk_matrix))
+        self.assertEqual(list(result.columns), ['cover_mod', 'min_save', 'sv_modified', 'prob_save'])
+        log_info('get_prob_save', result)
+
+    def test_get_w_unsaved_per_a(self):
         result = get_w_unsaved_per_a(self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
         self.assertEqual(list(result.columns), ['prob_dmg'])
         log_info('get_prob_dmg', result)
 
-    def test_get_avg_d_roll_placeholder(self):
+    def test_get_d_per_w_unsaved(self):
         result = get_d_per_w_unsaved(**self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
         self.assertEqual(list(result.columns), ['dmg', 'dmg_uncapped'])
         log_info('get_prob_dmg', result)
 
+    # ---- Attack outcomes
+
+    def test_get_d_per_r(self):
+        result = get_d_per_r(self.df_atk_matrix)
+        self.assertEqual(len(result), len(self.df_atk_matrix))
+        log_info('get_d_per_r', result)
+
+    def test_get_r_to_d(self):
+        result = get_r_to_d(self.df_atk_matrix)
+        self.assertEqual(len(result), len(self.df_atk_matrix))
+        log_info('get_r_to_d', result)
+
+    def test_get_d_to_k(self):
+        # Scalar tests
+        self.assertEqual(get_d_to_k(d=1, W=2), 2.0)
+        self.assertEqual(get_d_to_k(d=3, W=2), 1.0)
+        self.assertEqual(get_d_to_k(d=2, W=3), 2.0)
+        self.assertEqual(get_d_to_k(d=3.5, W=4), 2.0)
+        self.assertEqual(get_d_to_k(d=3.5, W=10), 3.0)
+
+        # Vectorised tests
+        result = get_d_to_k(1, **self.df_atk_matrix)
+        self.assertEqual(len(result), len(self.df_atk_matrix))
+        log_info('d_to_k', result)
+
+    def test_get_k_per_r(self):
+        result = get_k_per_r(self.df_atk_matrix)
+        self.assertEqual(len(result), len(self.df_atk_matrix))
+        log_info('k_per_r', result)
+
     def test_get_r_to_k(self):
         result = get_r_to_k(self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
-        self.assertEqual(list(result.columns), ['r_to_k'])
         log_info('r_to_k', result)
 
 if __name__ == '__main__':

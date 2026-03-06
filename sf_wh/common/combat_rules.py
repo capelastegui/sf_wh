@@ -53,6 +53,9 @@ import pandas as pd
 
 # -- Globals
 
+ATK_MATRIX_KEYS = ['faction', 'army', 'unit', 'model', 'name', 'mode',
+                   'def_army', 'def_unit', 'def_model']
+
 # -- Functions
 
 # ---- Utility functions
@@ -88,6 +91,14 @@ def get_df_atk_matrix(df_atk, df_def):
     return df_atk_matrix
 
 
+def get_df_atk_report(df_atk_matrix, *args):
+    if not len(args):
+        return df_atk_matrix
+    df_atk_matrix_keys = df_atk_matrix[ATK_MATRIX_KEYS]
+    df_atk_report = pd.concat([df_atk_matrix_keys]+list(args), axis=1)
+    return df_atk_report
+
+
 # ---- Attack steps
 
 # TO DO: Add a_extra to attack matrix - for random bonuses
@@ -96,19 +107,19 @@ def get_df_atk_matrix(df_atk, df_def):
 def get_a_blast(blast, n_models, **kwargs):
     """Get number of extra attacks from Blast ability"""
     a_blast = blast * (n_models % 5)
-    return a_blast
+    return pd.Series(a_blast, name='a_blast').fillna(0)
 
 
 def get_a_rapid_fire(rapid_fire, is_half_range, **kwargs):
     """Get number of extra attacks from rapid fire"""
     a_rapid_fire = rapid_fire * is_half_range
-    return a_rapid_fire
+    return pd.Series(a_rapid_fire, name='a_rapid_fire').fillna(0)
 
 
 def get_a(A, rapid_fire, is_half_range, blast, n_models, **kwargs):
     """Get number of attacks"""
-    a_total = A + get_a_rapid_fire(rapid_fire, is_half_range) + get_a_blast(blast, n_models)  # +a_extra
-    return a_total
+    a = A + get_a_rapid_fire(rapid_fire, is_half_range) + get_a_blast(blast, n_models)  # +a_extra
+    return pd.Series(a, name='a').fillna(0)
 
 
 def get_prob_h(H, rr_hit, bonus_hit, minus_hit, **kwargs):
@@ -189,36 +200,14 @@ def _get_prob_w_unsaved(prob_h, prob_w, prob_save):
 
     Internal function.
     """
-    prob_dmg = prob_h * prob_w * (1 - prob_save)
-    return pd.DataFrame(dict(prob_dmg=prob_dmg))
+    prob_w_unsaved = prob_h * prob_w * (1 - prob_save)
+    return pd.Series(prob_w_unsaved, name='prob_w_unsaved')
 
 
 
 
 # TO DO: get_d_melta
 # d_melta = melta * is_half_range
-
-
-def get_d_per_w_unsaved(D_fixed,D_n_dice,D_dice_size, W, **kwargs):
-    """Return average damage - simplified calculation"""
-    condlist = [D_dice_size == 6, D_dice_size ==3]
-    choicelist = [3.5, 2.]
-    d_roll = np.select(condlist, choicelist, 0)
-    dmg_uncapped = D_fixed + d_roll * D_n_dice
-    dmg = np.minimum(dmg_uncapped, W)
-    df_result = pd.DataFrame(dict(
-        dmg=dmg, dmg_uncapped=dmg_uncapped
-    ))
-    return df_result
-
-
-
-
-
-# ---- Attack outcomes
-
-# TO DO: get average damage per attack
-# d_per_a = prob_dmg * avg_d_roll
 
 def get_w_unsaved_per_a(df_atk_matrix):
     """Return probability of unsaved damage per attack"""
@@ -231,11 +220,44 @@ def get_w_unsaved_per_a(df_atk_matrix):
         prob_save=df_prob_save['prob_save'],
     )
 
+def get_d_per_w_unsaved(D_fixed,D_n_dice,D_dice_size, W, **kwargs):
+    """Return average damage - simplified calculation"""
+    condlist = [D_dice_size == 6, D_dice_size ==3]
+    choicelist = [3.5, 2.]
+    d_roll = np.select(condlist, choicelist, 0)
+    d_uncapped = D_fixed + d_roll * D_n_dice
+    d = np.minimum(d_uncapped, W)
+    df_result = pd.DataFrame(dict(
+        d=d, d_uncapped=d_uncapped
+    ))
+    return df_result
+
+
+def get_d_to_k(d, W, **kwargs):
+    """
+    Given Average damage, estimate how many unsaved attacks to kill
+
+    Note: This is inaccurate
+    We shouldn't be using average damage, but a more detailed estimation based on damage roll
+    """
+    # TO DO: - review!
+
+    # The following is true only when D_n_dice=0
+    return np.maximum(np.ceil(W/d),1)
+
+
+# ---- Attack outcomes
+
+# TO DO: get average damage per attack
+# d_per_a = prob_dmg * avg_d_roll
+
+
+
 def get_d_per_r(df_atk_matrix):
     a = get_a(**df_atk_matrix)
     w_unsaved_per_a = get_w_unsaved_per_a(df_atk_matrix)
     d_per_w = get_d_per_w_unsaved(**df_atk_matrix)
-    d_per_r = a * w_unsaved_per_a * d_per_w
+    d_per_r = a * w_unsaved_per_a * d_per_w.d
     return d_per_r
 
 
@@ -243,19 +265,15 @@ def get_r_to_d(df_atk_matrix):
     return 1/get_d_per_r(df_atk_matrix)
 
 
-def get_d_to_k(d, W):
-    return np.floor(d / W)
+def get_r_to_k(df_atk_matrix):
+    # TO DO - Review this
+    d_per_r = get_d_per_r(df_atk_matrix)
+    r_to_k = get_d_to_k(d_per_r, df_atk_matrix.W)
+    return r_to_k
 
 
 def get_k_per_r(df_atk_matrix):
-    # TO DO - Review this
-    d_per_r = get_d_per_r(df_atk_matrix)
-    k_per_r = get_d_to_k(d_per_r, W)
-    return k_per_r
-
-
-def get_r_to_k(df_atk_matrix):
-    return 1/get_k_per_r(df_atk_matrix)
+    return 1/get_r_to_k(df_atk_matrix)
 
  
 # ---- Damage roll calculations (work in progress)

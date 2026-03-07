@@ -112,9 +112,9 @@ class TestCombatRules(unittest.TestCase):
 
     def test_normalize_cols(self):
         s = pd.Series([10, 20])
-        s_expected = pd.Series([1,2])
+        s_expected = pd.Series([1.,2.])
         s_result = normalize_col(s)
-        pd.testing.assert_series_equal(s, s_expected)
+        pd.testing.assert_series_equal(s_result, s_expected)
 
     def test_normalize_df(self):
         df = get_df_atk_report(self.df_atk_matrix, pd.DataFrame(dict(c1=[1,2])))
@@ -140,7 +140,7 @@ class TestCombatRules(unittest.TestCase):
     def test_get_prob_h(self):
         result = get_prob_h(**self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
-        self.assertEqual(list(result.columns), ['net_bonus', 'H_mod', 'prob_h'])
+        self.assertEqual(list(result.columns), ['net_bonus', 'H_mod', 'prob_h', 'prob_crit_h'])
         log_info('get_prob_h', result)
 
     def test_get_prob_w(self):

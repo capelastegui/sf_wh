@@ -142,15 +142,6 @@ def get_a(A, rapid_fire, is_half_range, blast, n_models, **kwargs):
     return pd.Series(a, name='a').fillna(0)
 
 
-def get_prob_crit_h(crit_h):
-    prob_crit_h = (
-        (7 - crit_h) / 6
-        .mask(crit_h.isna()|(crit_h >= 7), 0.)
-    )
-    df_result = pd.DataFrame(dict(prob_crit_h=prob_crit_h))
-    return df_result
-
-
 def get_prob_crit_w(crit_w):
     prob_crit_w = (
         (7 - crit_w) / 6
@@ -160,7 +151,7 @@ def get_prob_crit_w(crit_w):
     return df_result
 
 
-def get_prob_h(H, rr_hit, bonus_hit, minus_hit, **kwargs):
+def get_prob_h(H, rr_hit, bonus_hit, minus_hit, crit_h, **kwargs):
     """Return probability of hitting, for a series of (attacker, defender).
 
     Note: bonus_hit and minus_hit are always positive values.
@@ -182,10 +173,14 @@ def get_prob_h(H, rr_hit, bonus_hit, minus_hit, **kwargs):
         # If unmodified H is 1 (i.e. torrent weapon) then prob = 1.0
         .mask(H == 1, 1.)
     )
+    prob_crit_h = (
+        ((7 - crit_h) / 6)
+        .mask(crit_h.isna() | (crit_h >= 7), 0.)
+    )
 
     # TODO: Add rr_hit
 
-    df_result = pd.DataFrame(dict(net_bonus=net_bonus, H_mod=H_mod, prob_h=prob_h))
+    df_result = pd.DataFrame(dict(net_bonus=net_bonus, H_mod=H_mod, prob_h=prob_h, prob_crit_h=prob_crit_h))
     return df_result
 
 

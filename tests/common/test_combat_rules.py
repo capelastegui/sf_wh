@@ -146,7 +146,7 @@ class TestCombatRules(unittest.TestCase):
     def test_get_prob_w(self):
         result = get_prob_w(**self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
-        self.assertEqual(list(result.columns), ['div_s_t', 'prob_w'])
+        self.assertEqual(list(result.columns), ['div_s_t', 'prob_w', 'prob_crit_w'])
         log_info('get_prob_w', result)
 
     def test_get_prob_save(self):

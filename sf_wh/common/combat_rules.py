@@ -142,15 +142,6 @@ def get_a(A, rapid_fire, is_half_range, blast, n_models, **kwargs):
     return pd.Series(a, name='a').fillna(0)
 
 
-def get_prob_crit_w(crit_w):
-    prob_crit_w = (
-        (7 - crit_w) / 6
-        .mask(crit_w.isna()|(crit_w >= 7), 0.)
-    )
-    df_result = pd.DataFrame(dict(prob_crit_w=prob_crit_w))
-    return df_result
-
-
 def get_prob_h(H, rr_hit, bonus_hit, minus_hit, crit_h, **kwargs):
     """Return probability of hitting, for a series of (attacker, defender).
 
@@ -184,10 +175,7 @@ def get_prob_h(H, rr_hit, bonus_hit, minus_hit, crit_h, **kwargs):
     return df_result
 
 
-
-
-
-def get_prob_w(S, anti_inf, anti_tank, rr_wound, bonus_w, T, minus_w, **kwargs):
+def get_prob_w(S, anti_inf, anti_tank, rr_wound, bonus_w, T, minus_w, crit_w, **kwargs):
     """Return probability of wounding given a hit, for a series of (attacker, defender).
 
     S:T mapping:
@@ -203,9 +191,14 @@ def get_prob_w(S, anti_inf, anti_tank, rr_wound, bonus_w, T, minus_w, **kwargs):
     choicelist = [1/6, 2/6, 3/6, 4/6, 5/6]
     prob_w = np.select(condlist, choicelist, 0.5)
 
+    prob_crit_w = (
+        ((7 - crit_w) / 6)
+        .mask(crit_w.isna()|(crit_w >= 7), 0.)
+    )
+
     # TO DO: Add anti_inf, anti_tank, rr_wound, bonus_w, minus_w
 
-    df_result = pd.DataFrame(dict(div_s_t=div_s_t, prob_w=prob_w))
+    df_result = pd.DataFrame(dict(div_s_t=div_s_t, prob_w=prob_w, prob_crit_w=prob_crit_w))
     return df_result
 
 

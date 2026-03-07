@@ -13,6 +13,8 @@ import pandas as pd
 
 from sf_wh.common.combat_rules import (
     cartesian_product_itertools,
+    normalize_col,
+    normalize_df,
     get_a,
     get_a_blast,
     get_a_rapid_fire,
@@ -51,7 +53,7 @@ _ATK_MATRIX_COLUMNS = [
     'R', 'A', 'H', 'S', 'AP', 'D_fixed', 'D_n_dice', 'D_dice_size',
     'rapid_fire', 'blast', 'melta', 'sustained_hits', 'letal_hits', 'dev_w',
     'anti_inf', 'anti_tank', 'ignore_cover', 'rr_hit', 'rr_wound',
-    'bonus_hit', 'bonus_w', 'crit_hit', 'crit_wound',
+    'bonus_hit', 'bonus_w', 'crit_h', 'crit_w',
     # from df_def (unit_rules), faction dropped, army/unit/model renamed
     'def_army', 'def_unit', 'def_model',
     'is_inf', 'n_models', 'T', 'SV', 'SV_invul', 'W', 'FNP',
@@ -68,7 +70,7 @@ _ATK_MATRIX_ROW_BOLT_GUN = {
     'rapid_fire': _NAN, 'blast': _NAN, 'melta': _NAN, 'sustained_hits': _NAN,
     'letal_hits': _NAN, 'dev_w': _NAN, 'anti_inf': _NAN, 'anti_tank': _NAN,
     'ignore_cover': False, 'rr_hit': False, 'rr_wound': False, 'bonus_hit': 0, 'bonus_w': 0,
-    'crit_hit': 6, 'crit_wound': 6,
+    'crit_h': 6, 'crit_w': 6,
 }
 
 # -- Functions
@@ -108,6 +110,16 @@ class TestCombatRules(unittest.TestCase):
         self.assertEqual(list(result.columns), ATK_MATRIX_KEYS+['c1'])
         log_info('get_df_atk_matrix', result)
 
+    def test_normalize_cols(self):
+        s = pd.Series([10, 20])
+        s_expected = pd.Series([1,2])
+        s_result = normalize_col(s)
+        pd.testing.assert_series_equal(s, s_expected)
+
+    def test_normalize_df(self):
+        df = get_df_atk_report(self.df_atk_matrix, pd.DataFrame(dict(c1=[1,2])))
+        df_result = normalize_df(df)
+        log_info('normalized df', df_result)
 
     def test_get_a_blast(self):
         result = get_a_blast(**self.df_atk_matrix)

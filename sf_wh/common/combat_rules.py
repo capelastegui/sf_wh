@@ -77,7 +77,8 @@ def roll_n_dice(dice_size, n_dice):
 
 def normalize_col(col):
     """In a numeric column, normalize all data based on the first value"""
-    # if col not numeric, return col
+    if not pd.api.types.is_numeric_dtype(col):
+        return col
     col_norm = col/col.iloc[0]
     return col_norm
 
@@ -89,7 +90,7 @@ def normalize_df(df, cols_exc=None):
 
     l_cols_norm = [c for c in df.columns if c not in cols_exc]
     df_norm = df.copy()
-    # df_norm [l_cols_norm] = df_norm [l_cols_norm].apply(normalize_col, axis=1)
+    df_norm[l_cols_norm] = df_norm[l_cols_norm].apply(normalize_col, axis=0)
     return df_norm
 
 
@@ -141,6 +142,24 @@ def get_a(A, rapid_fire, is_half_range, blast, n_models, **kwargs):
     return pd.Series(a, name='a').fillna(0)
 
 
+def get_prob_crit_h(crit_h):
+    prob_crit_h = (
+        (7 - crit_h) / 6
+        .mask(crit_h.isna()|(crit_h >= 7), 0.)
+    )
+    df_result = pd.DataFrame(dict(prob_crit_h=prob_crit_h))
+    return df_result
+
+
+def get_prob_crit_w(crit_w):
+    prob_crit_w = (
+        (7 - crit_w) / 6
+        .mask(crit_w.isna()|(crit_w >= 7), 0.)
+    )
+    df_result = pd.DataFrame(dict(prob_crit_w=prob_crit_w))
+    return df_result
+
+
 def get_prob_h(H, rr_hit, bonus_hit, minus_hit, **kwargs):
     """Return probability of hitting, for a series of (attacker, defender).
 
@@ -168,6 +187,9 @@ def get_prob_h(H, rr_hit, bonus_hit, minus_hit, **kwargs):
 
     df_result = pd.DataFrame(dict(net_bonus=net_bonus, H_mod=H_mod, prob_h=prob_h))
     return df_result
+
+
+
 
 
 def get_prob_w(S, anti_inf, anti_tank, rr_wound, bonus_w, T, minus_w, **kwargs):

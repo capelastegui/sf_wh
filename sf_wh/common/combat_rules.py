@@ -168,7 +168,6 @@ def get_prob_h(H, rr_hit, bonus_hit, minus_hit, crit_h, **kwargs):
         ((7 - crit_h) / 6)
         .mask(crit_h.isna() | (crit_h >= 7), 0.)
     )
-
     # TODO: Add rr_hit
 
     df_result = pd.DataFrame(dict(net_bonus=net_bonus, H_mod=H_mod, prob_h=prob_h, prob_crit_h=prob_crit_h))
@@ -223,13 +222,23 @@ def get_prob_save(is_melee, AP, ignore_cover, SV, SV_invul, rr_save, **kwargs):
     return df_result
 
 
-def _get_prob_w_unsaved(prob_h, prob_w, prob_save):
+def _get_prob_w_unsaved(prob_h, prob_crit_h, prob_w, prob_crit_w, prob_save, sustained_hits, lethal_hits, dev_w):
     """
     Return probability of (hitting AND wounding AND not saving) per attack
 
     Internal function.
     """
-    prob_w_unsaved = prob_h * prob_w * (1 - prob_save)
+    # non-lethal hits
+    prob_h_nonlethal = prob_h + prob_crit_h*sustained_hits - prob_crit_h*lethal_hits
+    prob_h_lethal = prob_crit_h*lethal_hits
+
+    # non-lethal, non-mortal wounds
+    prob_w_nonlethal = prob_h_nonlethal * (prob_w - prob_crit_w*dev_w)
+    prob_w_lethal = prob_h_lethal
+    prob_w_dev = prob_h_nonlethal * prob_crit_w * dev_w
+
+    # save
+    prob_w_unsaved = (prob_w_nonlethal + prob_w_lethal) * (1 - prob_save) + prob_w_dev
     return pd.Series(prob_w_unsaved, name='prob_w_unsaved')
 
 
@@ -243,11 +252,15 @@ def get_w_unsaved_per_a(df_atk_matrix):
     df_prob_h = get_prob_h(**df_atk_matrix)
     df_prob_w = get_prob_w(**df_atk_matrix)
     df_prob_save = get_prob_save(**df_atk_matrix)
-    return _get_prob_w_unsaved(
-        prob_h=df_prob_h['prob_h'],
-        prob_w=df_prob_w['prob_w'],
-        prob_save=df_prob_save['prob_save'],
-    )
+
+    df_prob_w_input = pd.concat([
+        df_prob_h[['prob_h', 'prob_crit_h']],
+        df_prob_w[['prob_w', 'prob_crit_w']],
+        df_prob_save[['prob_save']],
+        df_atk_matrix[['sustained_hits', 'lethal_hits', 'dev_w']].fillna(0)
+    ], axis=1)
+
+    return _get_prob_w_unsaved(**df_prob_w_input)
 
 def get_d_per_w_unsaved(D_fixed,D_n_dice,D_dice_size, W, **kwargs):
     """Return average damage - simplified calculation"""

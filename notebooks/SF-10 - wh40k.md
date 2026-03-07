@@ -283,7 +283,7 @@ df_atk_raw = pd.DataFrame(
     columns=[
         'faction', 'army', 'family', 'type', 'unit', 'model', 'is_melee', 'name', 'mode','is_half_range',
          'R', 'A', 'H', 'S', 'AP', 'D_fixed', 'D_n_dice', 'D_dice_size',
-         'rapid_fire', 'blast', 'melta', 'sustained_hits', 'letal_hits', 'dev_w', 'anti_inf', 'anti_tank',
+         'rapid_fire', 'blast', 'melta', 'sustained_hits', 'lethal_hits', 'dev_w', 'anti_inf', 'anti_tank',
          'ignore_cover', 'rr_hit', 'rr_wound', 'bonus_hit', 'bonus_w'
     ],
     data=[

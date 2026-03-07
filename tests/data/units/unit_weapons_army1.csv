@@ -1,4 +1,4 @@
-faction,army,family,type,unit,model,is_melee,name,mode,is_half_range,R,A,H,S,AP,D_fixed,D_n_dice,D_dice_size,rapid_fire,blast,melta,sustained_hits,letal_hits,dev_w,anti_inf,anti_tank,ignore_cover,rr_hit,rr_wound,bonus_hit,bonus_w,crit_h,crit_w
+faction,army,family,type,unit,model,is_melee,name,mode,is_half_range,R,A,H,S,AP,D_fixed,D_n_dice,D_dice_size,rapid_fire,blast,melta,sustained_hits,lethal_hits,dev_w,anti_inf,anti_tank,ignore_cover,rr_hit,rr_wound,bonus_hit,bonus_w,crit_h,crit_w
 imperium,any,Bolter,Basic,any,any,False,Bolt gun,-,False,24,2,3,4,0,1,0,0,,,,,,,,,False,False,False,0,0,6,6
 imperium,any,Bolter,Basic,any,any,False,Melta gun,-,False,12,1,3,9,4,0,1,6,,,2,,,,,,False,False,False,0,0,6,6
 imperium,any,Bolter,Basic,any,any,False,Melta gun,close range,True,12,1,3,9,4,0,1,6,,,2,,,,,,False,False,False,0,0,6,6

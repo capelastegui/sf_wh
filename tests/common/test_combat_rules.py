@@ -51,7 +51,7 @@ _ATK_MATRIX_COLUMNS = [
     'faction', 'army', 'family', 'type', 'unit', 'model',
     'is_melee', 'name', 'mode', 'is_half_range',
     'R', 'A', 'H', 'S', 'AP', 'D_fixed', 'D_n_dice', 'D_dice_size',
-    'rapid_fire', 'blast', 'melta', 'sustained_hits', 'letal_hits', 'dev_w',
+    'rapid_fire', 'blast', 'melta', 'sustained_hits', 'lethal_hits', 'dev_w',
     'anti_inf', 'anti_tank', 'ignore_cover', 'rr_hit', 'rr_wound',
     'bonus_hit', 'bonus_w', 'crit_h', 'crit_w',
     # from df_def (unit_rules), faction dropped, army/unit/model renamed
@@ -68,7 +68,7 @@ _ATK_MATRIX_ROW_BOLT_GUN = {
     'mode': '-', 'is_half_range': False,
     'R': 24, 'A': 2, 'H': 3, 'S': 4, 'AP': 0, 'D_fixed': 1, 'D_n_dice': 0, 'D_dice_size': 0,
     'rapid_fire': _NAN, 'blast': _NAN, 'melta': _NAN, 'sustained_hits': _NAN,
-    'letal_hits': _NAN, 'dev_w': _NAN, 'anti_inf': _NAN, 'anti_tank': _NAN,
+    'lethal_hits': _NAN, 'dev_w': _NAN, 'anti_inf': _NAN, 'anti_tank': _NAN,
     'ignore_cover': False, 'rr_hit': False, 'rr_wound': False, 'bonus_hit': 0, 'bonus_w': 0,
     'crit_h': 6, 'crit_w': 6,
 }
@@ -159,6 +159,7 @@ class TestCombatRules(unittest.TestCase):
         result = get_w_unsaved_per_a(self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
         self.assertEqual(result.name, 'prob_w_unsaved')
+        self.assertFalse(result.isna().any())
         log_info('get_w_unsaved_per_a', result)
 
     def test_get_d_per_w_unsaved(self):

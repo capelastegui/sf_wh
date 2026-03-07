@@ -75,6 +75,25 @@ def roll_n_dice(dice_size, n_dice):
     # TO DO: get row sum and aggregate to get probabilities
 
 
+def normalize_col(col):
+    """In a numeric column, normalize all data based on the first value"""
+    # if col not numeric, return col
+    col_norm = col/col.iloc[0]
+    return col_norm
+
+
+def normalize_df(df, cols_exc=None):
+    """In a table, normalize all numeric columns not in index"""
+    if cols_exc is None:
+        cols_exc = []
+
+    l_cols_norm = [c for c in df.columns if c not in cols_exc]
+    df_norm = df.copy()
+    # df_norm [l_cols_norm] = df_norm [l_cols_norm].apply(normalize_col, axis=1)
+    return df_norm
+
+
+
 # ---- Attack matrix construction
 
 def get_df_atk_matrix(df_atk, df_def):

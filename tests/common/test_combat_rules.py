@@ -51,7 +51,7 @@ _ATK_MATRIX_COLUMNS = [
     'R', 'A', 'H', 'S', 'AP', 'D_fixed', 'D_n_dice', 'D_dice_size',
     'rapid_fire', 'blast', 'melta', 'sustained_hits', 'letal_hits', 'dev_w',
     'anti_inf', 'anti_tank', 'ignore_cover', 'rr_hit', 'rr_wound',
-    'bonus_hit', 'bonus_w',
+    'bonus_hit', 'bonus_w', 'crit_hit', 'crit_wound',
     # from df_def (unit_rules), faction dropped, army/unit/model renamed
     'def_army', 'def_unit', 'def_model',
     'is_inf', 'n_models', 'T', 'SV', 'SV_invul', 'W', 'FNP',
@@ -68,6 +68,7 @@ _ATK_MATRIX_ROW_BOLT_GUN = {
     'rapid_fire': _NAN, 'blast': _NAN, 'melta': _NAN, 'sustained_hits': _NAN,
     'letal_hits': _NAN, 'dev_w': _NAN, 'anti_inf': _NAN, 'anti_tank': _NAN,
     'ignore_cover': False, 'rr_hit': False, 'rr_wound': False, 'bonus_hit': 0, 'bonus_w': 0,
+    'crit_hit': 6, 'crit_wound': 6,
 }
 
 # -- Functions
@@ -145,14 +146,14 @@ class TestCombatRules(unittest.TestCase):
     def test_get_w_unsaved_per_a(self):
         result = get_w_unsaved_per_a(self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
-        self.assertEqual(list(result.columns), ['prob_dmg'])
-        log_info('get_prob_dmg', result)
+        self.assertEqual(result.name, 'prob_w_unsaved')
+        log_info('get_w_unsaved_per_a', result)
 
     def test_get_d_per_w_unsaved(self):
         result = get_d_per_w_unsaved(**self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
-        self.assertEqual(list(result.columns), ['dmg', 'dmg_uncapped'])
-        log_info('get_prob_dmg', result)
+        self.assertEqual(list(result.columns), ['d', 'd_uncapped'])
+        log_info('get_d_per_w_unsaved', result)
 
     # ---- Attack outcomes
 

@@ -27,8 +27,8 @@ def read_unit_csv(ruleset, file_name):
 
 
 def read_unit_rules(army, ruleset='gw'):
-    """Read unit_rules_[army].csv for the given ruleset."""
-    return read_unit_csv(ruleset, f'unit_rules_{army}.csv')
+    """Read unit_defense_[army].csv for the given ruleset."""
+    return read_unit_csv(ruleset, f'unit_defense_{army}.csv')
 
 
 def read_unit_point(army, ruleset='gw'):

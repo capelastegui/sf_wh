@@ -43,20 +43,20 @@ _UNIT_WEAPONS_COLUMNS = [
 class TestReadUnitCsv(unittest.TestCase):
     @patch('sf_wh.common.unit_loader.pd.read_csv')
     def test_calls_read_csv_with_correct_path(self, mock_read_csv):
-        read_unit_csv('gw', 'unit_rules_army1.csv')
-        expected = _RULES_DIR / 'gw' / 'units' / 'unit_rules_army1.csv'
+        read_unit_csv('gw', 'unit_defense_army1.csv')
+        expected = _RULES_DIR / 'gw' / 'units' / 'unit_defense_army1.csv'
         mock_read_csv.assert_called_once_with(expected)
 
     @patch('sf_wh.common.unit_loader.pd.read_csv')
     def test_returns_dataframe(self, mock_read_csv):
-        result = read_unit_csv('gw', 'unit_rules_army1.csv')
+        result = read_unit_csv('gw', 'unit_defense_army1.csv')
         self.assertIs(result, mock_read_csv.return_value)
 
     def test_reads_real_csv(self):
-        result = read_unit_csv('gw', 'unit_rules_army1.csv')
+        result = read_unit_csv('gw', 'unit_defense_army1.csv')
         self.assertIsNotNone(result)
         self.assertEqual(list(result.columns), _UNIT_RULES_COLUMNS)
-        result_test = read_unit_csv('test', 'unit_rules_army1.csv')
+        result_test = read_unit_csv('test', 'unit_defense_army1.csv')
         self.assertIsNotNone(result_test)
         self.assertEqual(list(result_test.columns), _UNIT_RULES_COLUMNS)
 
@@ -65,12 +65,12 @@ class TestReadUnitRules(unittest.TestCase):
     @patch('sf_wh.common.unit_loader.read_unit_csv')
     def test_default_ruleset(self, mock_read_unit_csv):
         read_unit_rules('army1')
-        mock_read_unit_csv.assert_called_once_with('gw', 'unit_rules_army1.csv')
+        mock_read_unit_csv.assert_called_once_with('gw', 'unit_defense_army1.csv')
 
     @patch('sf_wh.common.unit_loader.read_unit_csv')
     def test_custom_ruleset(self, mock_read_unit_csv):
         read_unit_rules('army1', ruleset='sf2')
-        mock_read_unit_csv.assert_called_once_with('sf2', 'unit_rules_army1.csv')
+        mock_read_unit_csv.assert_called_once_with('sf2', 'unit_defense_army1.csv')
 
     def test_reads_real_csv(self):
         result = read_unit_rules('army1', ruleset='gw')

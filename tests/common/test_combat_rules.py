@@ -86,6 +86,12 @@ class TestCombatRules(unittest.TestCase):
     df_atk_matrix = pd.DataFrame([
         {
             **_ATK_MATRIX_ROW_BOLT_GUN,
+            'def_army': 'Astra Militarum', 'def_unit': 'Guard', 'def_model': _NAN,
+            'is_inf': True, 'n_models': 1, 'T': 3, 'SV': 5, 'SV_invul': _NAN, 'W': 1, 'FNP': _NAN,
+            'minus_hit': 0, 'minus_w': 0, 'D_subtract': 0, 'D_halve': False, 'rr_save': False,
+        },
+        {
+            **_ATK_MATRIX_ROW_BOLT_GUN,
             'def_army': 'Space Marines', 'def_unit': 'Intercessors', 'def_model': _NAN,
             'is_inf': True, 'n_models': 1, 'T': 4, 'SV': 3, 'SV_invul': _NAN, 'W': 2, 'FNP': _NAN,
             'minus_hit': 0, 'minus_w': 0, 'D_subtract': 0, 'D_halve': False, 'rr_save': False,
@@ -182,7 +188,9 @@ class TestCombatRules(unittest.TestCase):
 
     def test_get_d_to_k(self):
         # Scalar tests
+        self.assertEqual(get_d_to_k(d=1, W=1), 1.0)
         self.assertEqual(get_d_to_k(d=1, W=2), 2.0)
+        self.assertEqual(get_d_to_k(d=1, W=3), 3.0)
         self.assertEqual(get_d_to_k(d=3, W=2), 1.0)
         self.assertEqual(get_d_to_k(d=2, W=3), 2.0)
         self.assertEqual(get_d_to_k(d=3.5, W=4), 2.0)
@@ -201,6 +209,8 @@ class TestCombatRules(unittest.TestCase):
     def test_get_r_to_k(self):
         result = get_r_to_k(self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
+        s_expected = pd.Series([2.25, 9., 40.5])
+        pd.testing.assert_series_equal(result, s_expected)
         log_info('r_to_k', result)
 
 if __name__ == '__main__':

@@ -295,11 +295,13 @@ def get_d_to_k(d, W, **kwargs):
 
 
 
-def get_d_per_r(df_atk_matrix):
+def get_d_per_r(df_atk_matrix, d_per_w_unsaved=None):
+    if d_per_w_unsaved is None:
+        d_per_w_unsaved = get_d_per_w_unsaved(**df_atk_matrix)
+
     a = get_a(**df_atk_matrix)
     w_unsaved_per_a = get_w_unsaved_per_a(df_atk_matrix)
-    d_per_w = get_d_per_w_unsaved(**df_atk_matrix)
-    d_per_r = a * w_unsaved_per_a * d_per_w.d
+    d_per_r = a * w_unsaved_per_a * d_per_w_unsaved.d
     return d_per_r
 
 
@@ -308,14 +310,18 @@ def get_r_to_d(df_atk_matrix):
 
 
 def get_r_to_k(df_atk_matrix):
-    # TO DO - Review this
-    d_per_r = get_d_per_r(df_atk_matrix)
-    r_to_k = get_d_to_k(d_per_r, df_atk_matrix.W)
+    r_to_k = 1/get_k_per_r(df_atk_matrix)
     return r_to_k
 
 
 def get_k_per_r(df_atk_matrix):
-    return 1/get_r_to_k(df_atk_matrix)
+    d_per_w_unsaved = get_d_per_w_unsaved(**df_atk_matrix)
+    d_to_k = get_d_to_k(d_per_w_unsaved.d, df_atk_matrix.W)
+
+    d_per_r = get_d_per_r(df_atk_matrix, d_per_w_unsaved)
+    k_per_r = d_per_r / d_to_k
+
+    return k_per_r
 
  
 # ---- Damage roll calculations (work in progress)

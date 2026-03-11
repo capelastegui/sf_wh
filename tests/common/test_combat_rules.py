@@ -186,10 +186,28 @@ class TestCombatRules(unittest.TestCase):
         log_info('get_w_unsaved_per_a', result)
 
     def test_get_d_per_w_unsaved(self):
-        result = get_d_per_w_unsaved(**self.df_atk_matrix)
-        self.assertEqual(len(result), len(self.df_atk_matrix))
-        self.assertEqual(list(result.columns), ['d', 'd_uncapped'])
-        log_info('get_d_per_w_unsaved', result)
+
+        # Test with custom input
+        df_in = pd.DataFrame(
+            columns = ['D_fixed', 'D_n_dice', 'D_dice_size', 'W'],
+            data = [
+                [1, 0, 0, 1],
+                [2, 0, 0, 1],
+                [0, 1, 3, 1],
+                [0, 1, 3, 2],
+                [0, 1, 6, 10],
+                [0, 1, 6, 2]
+            ]
+        )
+
+        df_result = get_d_per_w_unsaved(**df_in)
+        log_info('get_d_per_w_unsaved', df_result)
+
+        # Test with vect input
+        df_result = get_d_per_w_unsaved(**self.df_atk_matrix)
+        self.assertEqual(len(df_result), len(self.df_atk_matrix))
+        self.assertEqual(list(df_result.columns), ['d', 'd_uncapped'])
+        log_info('get_d_per_w_unsaved', df_result)
 
     # ---- Attack outcomes
 

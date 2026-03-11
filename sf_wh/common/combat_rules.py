@@ -248,7 +248,7 @@ def _get_prob_w_unsaved(prob_h, prob_crit_h, prob_w, prob_crit_w, prob_save, sus
 # d_melta = melta * is_half_range
 
 def get_w_unsaved_per_a(df_atk_matrix):
-    """Return probability of unsaved damage per attack"""
+    """Return probability of unsaved wounds per attack"""
     df_prob_h = get_prob_h(**df_atk_matrix)
     df_prob_w = get_prob_w(**df_atk_matrix)
     df_prob_save = get_prob_save(**df_atk_matrix)
@@ -263,7 +263,7 @@ def get_w_unsaved_per_a(df_atk_matrix):
     return _get_prob_w_unsaved(**df_prob_w_input)
 
 def get_d_per_w_unsaved(D_fixed,D_n_dice,D_dice_size, W, **kwargs):
-    """Return average damage - simplified calculation"""
+    """Return average damage per unsaved wound - simplified calculation"""
     condlist = [D_dice_size == 6, D_dice_size ==3]
     choicelist = [3.5, 2.]
     d_roll = np.select(condlist, choicelist, 0)

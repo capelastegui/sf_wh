@@ -73,6 +73,38 @@ _ATK_MATRIX_ROW_BOLT_GUN = {
     'crit_h': 6, 'crit_w': 6,
 }
 
+_ATK_MATRIX_ROW_HEAVY_BOLTER = {
+    'faction': 'imperium', 'army': 'any', 'family': 'Bolter', 'type': 'Basic',
+    'unit': 'any', 'model': 'any', 'is_melee': False, 'name': 'Heavy Bolter',
+    'mode': '-', 'is_half_range': False,
+    'R': 36, 'A': 3, 'H': 3, 'S': 5, 'AP': 1, 'D_fixed': 2, 'D_n_dice': 0, 'D_dice_size': 0,
+    'rapid_fire': _NAN, 'blast': _NAN, 'melta': _NAN, 'sustained_hits': 1,
+    'lethal_hits': _NAN, 'dev_w': _NAN, 'anti_inf': _NAN, 'anti_tank': _NAN,
+    'ignore_cover': False, 'rr_hit': False, 'rr_wound': False, 'bonus_hit': 0, 'bonus_w': 0,
+    'crit_h': 6, 'crit_w': 6,
+}
+
+_DEF_MATRIX_ROW_GUARD = {
+    'def_army': 'Astra Militarum', 'def_unit': 'Guard', 'def_model': _NAN,
+    'is_inf': True, 'n_models': 1, 'T': 3, 'SV': 5, 'SV_invul': _NAN, 'W': 1, 'FNP': _NAN,
+    'minus_hit': 0, 'minus_w': 0, 'D_subtract': 0, 'D_halve': False, 'rr_save': False,
+}
+
+_DEF_MATRIX_ROW_INTERCESSORS = {
+    'def_army': 'Space Marines', 'def_unit': 'Intercessors', 'def_model': _NAN,
+    'is_inf': True, 'n_models': 1, 'T': 4, 'SV': 3, 'SV_invul': _NAN, 'W': 2, 'FNP': _NAN,
+    'minus_hit': 0, 'minus_w': 0, 'D_subtract': 0, 'D_halve': False, 'rr_save': False,
+}
+
+_DEF_MATRIX_ROW_TERMINATORS = {
+    'def_army': 'Space Marines', 'def_unit': 'Terminators', 'def_model': _NAN,
+    'is_inf': True, 'n_models': 1, 'T': 5, 'SV': 2, 'SV_invul': 4.0, 'W': 3, 'FNP': _NAN,
+    'minus_hit': 0, 'minus_w': 0, 'D_subtract': 0, 'D_halve': False, 'rr_save': False,
+}
+
+_ATK_ROWS = [_ATK_MATRIX_ROW_BOLT_GUN, _ATK_MATRIX_ROW_HEAVY_BOLTER]
+_DEF_ROWS = [_DEF_MATRIX_ROW_GUARD, _DEF_MATRIX_ROW_INTERCESSORS, _DEF_MATRIX_ROW_TERMINATORS]
+
 # -- Functions
 
 def log_info(msg, data):
@@ -83,26 +115,11 @@ def log_info(msg, data):
 class TestCombatRules(unittest.TestCase):
     df_atk = read_unit_weapons('army1', ruleset='test')
     df_def = read_unit_rules('army1', ruleset='test')
-    df_atk_matrix = pd.DataFrame([
-        {
-            **_ATK_MATRIX_ROW_BOLT_GUN,
-            'def_army': 'Astra Militarum', 'def_unit': 'Guard', 'def_model': _NAN,
-            'is_inf': True, 'n_models': 1, 'T': 3, 'SV': 5, 'SV_invul': _NAN, 'W': 1, 'FNP': _NAN,
-            'minus_hit': 0, 'minus_w': 0, 'D_subtract': 0, 'D_halve': False, 'rr_save': False,
-        },
-        {
-            **_ATK_MATRIX_ROW_BOLT_GUN,
-            'def_army': 'Space Marines', 'def_unit': 'Intercessors', 'def_model': _NAN,
-            'is_inf': True, 'n_models': 1, 'T': 4, 'SV': 3, 'SV_invul': _NAN, 'W': 2, 'FNP': _NAN,
-            'minus_hit': 0, 'minus_w': 0, 'D_subtract': 0, 'D_halve': False, 'rr_save': False,
-        },
-        {
-            **_ATK_MATRIX_ROW_BOLT_GUN,
-            'def_army': 'Space Marines', 'def_unit': 'Terminators', 'def_model': _NAN,
-            'is_inf': True, 'n_models': 1, 'T': 5, 'SV': 2, 'SV_invul': 4.0, 'W': 3, 'FNP': _NAN,
-            'minus_hit': 0, 'minus_w': 0, 'D_subtract': 0, 'D_halve': False, 'rr_save': False,
-        },
-    ], columns=_ATK_MATRIX_COLUMNS)
+    df_atk_matrix = pd.merge(
+        pd.DataFrame(_ATK_ROWS),
+        pd.DataFrame(_DEF_ROWS),
+        how='cross',
+    )[_ATK_MATRIX_COLUMNS]
 
     def test_get_df_atk_matrix(self):
         result = get_df_atk_matrix(self.df_atk, self.df_def)
@@ -209,7 +226,7 @@ class TestCombatRules(unittest.TestCase):
     def test_get_r_to_k(self):
         result = get_r_to_k(self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
-        s_expected = pd.Series([2.25, 9., 40.5])
+        s_expected = pd.Series([2.25, 9., 40.5, 0.9, 1.8, 9.6])
         pd.testing.assert_series_equal(result, s_expected)
         log_info('r_to_k', result)
 

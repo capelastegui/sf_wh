@@ -294,7 +294,7 @@ def get_d_to_k(d, W, **kwargs):
 # d_per_a = prob_dmg * avg_d_roll
 
 
-
+# DEPRECATE
 def get_d_per_r(df_atk_matrix, d_per_w_unsaved=None):
     if d_per_w_unsaved is None:
         d_per_w_unsaved = get_d_per_w_unsaved(**df_atk_matrix)
@@ -315,11 +315,15 @@ def get_r_to_k(df_atk_matrix):
 
 
 def get_k_per_r(df_atk_matrix):
+
+    a = get_a(**df_atk_matrix)
+    w_unsaved_per_a = get_w_unsaved_per_a(df_atk_matrix)
+    w_unsaved_per_r = a * w_unsaved_per_a
+
     d_per_w_unsaved = get_d_per_w_unsaved(**df_atk_matrix)
     d_to_k = get_d_to_k(d_per_w_unsaved.d, df_atk_matrix.W)
 
-    d_per_r = get_d_per_r(df_atk_matrix, d_per_w_unsaved)
-    k_per_r = d_per_r / d_to_k
+    k_per_r = w_unsaved_per_r / d_to_k
 
     return k_per_r
 

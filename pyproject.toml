@@ -14,5 +14,8 @@ dependencies = [
     "jupytext>=1.19.1",
 ]
 
+[tool.jupytext]
+formats = "notebooks///ipynb,notebooks///md"
+
 [tool.setuptools.packages.find]
 include = ["sf_wh*"]

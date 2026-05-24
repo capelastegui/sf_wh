@@ -23,10 +23,10 @@ Attack sequence summary:
     - in a given round, `r`
     - determine number of attacks, `a`
     - determine number of hits, `h`
-      - Includes non-critical hits `h_noncrit` and critical hits `h_crit`
+      - Includes non-critical hits `nh` and critical hits `ch`
     - determine number of wounding attacks pre-save, `w`
-      - Includes non-critical wounds `w_noncrit` and critical wounds `w_crit`
-    - determine number of unsaved wounds, `w_unsaved`
+      - Includes non-critical wounds `nw` and critical wounds `cw`
+    - determine number of unsaved attacks, `ua`
     - determine value of unsaved damage, `d`
     - evaluate number of target models killed, `k`
 
@@ -164,13 +164,13 @@ def get_prob_h(H, rr_hit, bonus_hit, minus_hit, crit_h, **kwargs):
         # If unmodified H is 1 (i.e. torrent weapon) then prob = 1.0
         .mask(H == 1, 1.)
     )
-    prob_crit_h = (
+    prob_ch = (
         ((7 - crit_h) / 6)
         .mask(crit_h.isna() | (crit_h >= 7), 0.)
     )
     # TODO: Add rr_hit
 
-    df_result = pd.DataFrame(dict(net_bonus=net_bonus, H_mod=H_mod, prob_h=prob_h, prob_crit_h=prob_crit_h))
+    df_result = pd.DataFrame(dict(net_bonus=net_bonus, H_mod=H_mod, prob_h=prob_h, prob_ch=prob_ch))
     return df_result
 
 
@@ -190,14 +190,14 @@ def get_prob_w(S, anti_inf, anti_tank, rr_wound, bonus_w, T, minus_w, crit_w, **
     choicelist = [1/6, 2/6, 3/6, 4/6, 5/6]
     prob_w = np.select(condlist, choicelist, 0.5)
 
-    prob_crit_w = (
+    prob_cw = (
         ((7 - crit_w) / 6)
         .mask(crit_w.isna()|(crit_w >= 7), 0.)
     )
 
     # TO DO: Add anti_inf, anti_tank, rr_wound, bonus_w, minus_w
 
-    df_result = pd.DataFrame(dict(div_s_t=div_s_t, prob_w=prob_w, prob_crit_w=prob_crit_w))
+    df_result = pd.DataFrame(dict(div_s_t=div_s_t, prob_w=prob_w, prob_cw=prob_cw))
     return df_result
 
 
@@ -222,24 +222,24 @@ def get_prob_save(is_melee, AP, ignore_cover, SV, SV_invul, rr_save, **kwargs):
     return df_result
 
 
-def _get_prob_w_unsaved(prob_h, prob_crit_h, prob_w, prob_crit_w, prob_save, sustained_hits, lethal_hits, dev_w):
+def _get_prob_ua(prob_h, prob_ch, prob_w, prob_cw, prob_save, sustained_hits, lethal_hits, dev_w):
     """
     Return probability of (hitting AND wounding AND not saving) per attack
 
     Internal function.
     """
     # non-lethal hits
-    prob_h_nonlethal = prob_h + prob_crit_h*sustained_hits - prob_crit_h*lethal_hits
-    prob_h_lethal = prob_crit_h*lethal_hits
+    prob_h_nonlethal = prob_h + prob_ch*sustained_hits - prob_ch*lethal_hits
+    prob_h_lethal = prob_ch*lethal_hits
 
     # non-lethal, non-mortal wounds
-    prob_w_nonlethal = prob_h_nonlethal * (prob_w - prob_crit_w*dev_w)
+    prob_w_nonlethal = prob_h_nonlethal * (prob_w - prob_cw*dev_w)
     prob_w_lethal = prob_h_lethal
-    prob_w_dev = prob_h_nonlethal * prob_crit_w * dev_w
+    prob_w_dev = prob_h_nonlethal * prob_cw * dev_w
 
     # save
-    prob_w_unsaved = (prob_w_nonlethal + prob_w_lethal) * (1 - prob_save) + prob_w_dev
-    return pd.Series(prob_w_unsaved, name='prob_w_unsaved')
+    prob_ua = (prob_w_nonlethal + prob_w_lethal) * (1 - prob_save) + prob_w_dev
+    return pd.Series(prob_ua, name='prob_ua')
 
 
 
@@ -247,23 +247,23 @@ def _get_prob_w_unsaved(prob_h, prob_crit_h, prob_w, prob_crit_w, prob_save, sus
 # TO DO: get_d_melta
 # d_melta = melta * is_half_range
 
-def get_w_unsaved_per_a(df_atk_matrix):
-    """Return probability of unsaved wounds per attack"""
+def get_ua_per_a(df_atk_matrix):
+    """Return probability of unsaved attacks per attack"""
     df_prob_h = get_prob_h(**df_atk_matrix)
     df_prob_w = get_prob_w(**df_atk_matrix)
     df_prob_save = get_prob_save(**df_atk_matrix)
 
     df_prob_w_input = pd.concat([
-        df_prob_h[['prob_h', 'prob_crit_h']],
-        df_prob_w[['prob_w', 'prob_crit_w']],
+        df_prob_h[['prob_h', 'prob_ch']],
+        df_prob_w[['prob_w', 'prob_cw']],
         df_prob_save[['prob_save']],
         df_atk_matrix[['sustained_hits', 'lethal_hits', 'dev_w']].fillna(0)
     ], axis=1)
 
-    return _get_prob_w_unsaved(**df_prob_w_input)
+    return _get_prob_ua(**df_prob_w_input)
 
-def get_d_per_w_unsaved(D_fixed,D_n_dice,D_dice_size, W, **kwargs):
-    """Return average damage per unsaved wound - simplified calculation"""
+def get_d_per_ua(D_fixed,D_n_dice,D_dice_size, W, **kwargs):
+    """Return average damage per unsaved attack - simplified calculation"""
 
     # Number of dice is either 0 or 1
     D_n_dice_clean = np.minimum(D_dice_size.fillna(0),1)
@@ -272,13 +272,13 @@ def get_d_per_w_unsaved(D_fixed,D_n_dice,D_dice_size, W, **kwargs):
         .map({3:np.array([1,2,3]), 6:np.array([1,2,3,4,5,6]), 0:np.array([0])})
     )
 
-    d_uncapped_values = D_fixed + d_roll * D_n_dice_clean
-    df_uncapped = pd.DataFrame(dict(d_uncapped=d_uncapped_values, W=W))
-    d_values = df_uncapped.apply(lambda x: np.minimum(x.d_uncapped, x.W), axis=1)
-    d_uncapped = d_uncapped_values.apply(lambda x:np.mean(x))
+    ud_values = D_fixed + d_roll * D_n_dice_clean
+    df_uncapped = pd.DataFrame(dict(ud=ud_values, W=W))
+    d_values = df_uncapped.apply(lambda x: np.minimum(x.ud, x.W), axis=1)
+    ud = ud_values.apply(lambda x:np.mean(x))
     d = d_values.apply(lambda x: np.mean(x))
     df_result = pd.DataFrame(dict(
-        d=d, d_uncapped=d_uncapped
+        d=d, ud=ud
     ))
 
     # Note: doesn't quite match expectations
@@ -313,13 +313,13 @@ def get_d_to_k(d, W, **kwargs):
 
 
 # DEPRECATE
-def get_d_per_r(df_atk_matrix, d_per_w_unsaved=None):
-    if d_per_w_unsaved is None:
-        d_per_w_unsaved = get_d_per_w_unsaved(**df_atk_matrix)
+def get_d_per_r(df_atk_matrix, d_per_ua=None):
+    if d_per_ua is None:
+        d_per_ua = get_d_per_ua(**df_atk_matrix)
 
     a = get_a(**df_atk_matrix)
-    w_unsaved_per_a = get_w_unsaved_per_a(df_atk_matrix)
-    d_per_r = a * w_unsaved_per_a * d_per_w_unsaved.d
+    ua_per_a = get_ua_per_a(df_atk_matrix)
+    d_per_r = a * ua_per_a * d_per_ua.d
     return d_per_r
 
 
@@ -335,13 +335,13 @@ def get_r_to_k(df_atk_matrix):
 def get_k_per_r(df_atk_matrix):
 
     a = get_a(**df_atk_matrix)
-    w_unsaved_per_a = get_w_unsaved_per_a(df_atk_matrix)
-    w_unsaved_per_r = a * w_unsaved_per_a
+    ua_per_a = get_ua_per_a(df_atk_matrix)
+    ua_per_r = a * ua_per_a
 
-    d_per_w_unsaved = get_d_per_w_unsaved(**df_atk_matrix)
-    d_to_k = get_d_to_k(d_per_w_unsaved.d, df_atk_matrix.W)
+    d_per_ua = get_d_per_ua(**df_atk_matrix)
+    d_to_k = get_d_to_k(d_per_ua.d, df_atk_matrix.W)
 
-    k_per_r = w_unsaved_per_r / d_to_k
+    k_per_r = ua_per_r / d_to_k
 
     return k_per_r
 

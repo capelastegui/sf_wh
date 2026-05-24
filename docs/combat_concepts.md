@@ -33,23 +33,27 @@ Attacks are resolved as follows:
       - The number of models killed in an attack cannot exceed the number of remaining models in the target unit. However, it is often useful to estimate a number of killed models as if this limit didn't exist.
 
 The sequence can be summarised as:
-- turn -> attacks -> hits -> wounds -> n * (unsaved attack -> damage -> kill)
+- round -> attacks -> hits -> wounds -> n * (unsaved attack -> damage -> kill)
 
 Combat Sequence Abbreviations:
-- T: turn
+- R: round
 - A: attack
 - H: hit
+  - CH: critical hit
+  - NH: non-critical hit
 - W: wound
+  - CW: critical wound
+  - NW: non-critical wound
 - UA: unsaved attack
 - D: damage
 - UD: uncapped damage
 - K: kills
 
 In this project, we provide a series of tools to calculate or predict combat outcomes. The main metrics we use are:
-- kills per turn: Number of models killed by a set of attacking weapons, in a turn
-- turns to kill: Number of turns it takes to kill a model or unit with a set of attacking weapons
+- kills per round: Number of models killed by a set of attacking weapons, in a round
+- rounds to kill: Number of rounds it takes to kill a model or unit with a set of attacking weapons
 
-These are often abbreviated as KpT and TtK. More generally we sometimes want to estimate the ratio between any 2 steps X, Y in a combat sequence (where Y comes after X):
+These are often abbreviated as KpR and RtK. More generally we sometimes want to estimate the ratio between any 2 steps X, Y in a combat sequence (where Y comes after X):
 - YpX: Y per X: Value of Y for each X
 - XtY: X to Y: Number of X it takes to get a unit of Y
 

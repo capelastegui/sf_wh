@@ -19,7 +19,7 @@ from sf_wh.common.combat_rules import (
     get_a_blast,
     get_a_rapid_fire,
     get_d_per_r,
-    get_d_per_w_unsaved,
+    get_d_per_ua,
     get_d_to_k,
     get_df_atk_matrix,
     get_df_atk_report,
@@ -27,7 +27,7 @@ from sf_wh.common.combat_rules import (
     get_prob_save,
     get_prob_w,
     get_r_to_d,
-    get_w_unsaved_per_a,
+    get_ua_per_a,
     get_k_per_r,
     get_r_to_k,
     process_D,
@@ -163,13 +163,13 @@ class TestCombatRules(unittest.TestCase):
     def test_get_prob_h(self):
         result = get_prob_h(**self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
-        self.assertEqual(list(result.columns), ['net_bonus', 'H_mod', 'prob_h', 'prob_crit_h'])
+        self.assertEqual(list(result.columns), ['net_bonus', 'H_mod', 'prob_h', 'prob_ch'])
         log_info('get_prob_h', result)
 
     def test_get_prob_w(self):
         result = get_prob_w(**self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
-        self.assertEqual(list(result.columns), ['div_s_t', 'prob_w', 'prob_crit_w'])
+        self.assertEqual(list(result.columns), ['div_s_t', 'prob_w', 'prob_cw'])
         log_info('get_prob_w', result)
 
     def test_get_prob_save(self):
@@ -178,14 +178,14 @@ class TestCombatRules(unittest.TestCase):
         self.assertEqual(list(result.columns), ['cover_mod', 'min_save', 'sv_modified', 'prob_save'])
         log_info('get_prob_save', result)
 
-    def test_get_w_unsaved_per_a(self):
-        result = get_w_unsaved_per_a(self.df_atk_matrix)
+    def test_get_ua_per_a(self):
+        result = get_ua_per_a(self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))
-        self.assertEqual(result.name, 'prob_w_unsaved')
+        self.assertEqual(result.name, 'prob_ua')
         self.assertFalse(result.isna().any())
-        log_info('get_w_unsaved_per_a', result)
+        log_info('get_ua_per_a', result)
 
-    def test_get_d_per_w_unsaved(self):
+    def test_get_d_per_ua(self):
 
         # Test with custom input
         df_in = pd.DataFrame(
@@ -204,14 +204,14 @@ class TestCombatRules(unittest.TestCase):
             ]
         )
 
-        df_result = get_d_per_w_unsaved(**df_in)
-        log_info('get_d_per_w_unsaved', df_result)
+        df_result = get_d_per_ua(**df_in)
+        log_info('get_d_per_ua', df_result)
 
         # Test with vect input
-        df_result = get_d_per_w_unsaved(**self.df_atk_matrix)
+        df_result = get_d_per_ua(**self.df_atk_matrix)
         self.assertEqual(len(df_result), len(self.df_atk_matrix))
-        self.assertEqual(list(df_result.columns), ['d', 'd_uncapped'])
-        log_info('get_d_per_w_unsaved', df_result)
+        self.assertEqual(list(df_result.columns), ['d', 'ud'])
+        log_info('get_d_per_ua', df_result)
 
     # ---- Attack outcomes
 

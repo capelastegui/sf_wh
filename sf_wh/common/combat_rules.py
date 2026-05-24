@@ -264,14 +264,32 @@ def get_w_unsaved_per_a(df_atk_matrix):
 
 def get_d_per_w_unsaved(D_fixed,D_n_dice,D_dice_size, W, **kwargs):
     """Return average damage per unsaved wound - simplified calculation"""
-    condlist = [D_dice_size == 6, D_dice_size ==3]
-    choicelist = [3.5, 2.]
-    d_roll = np.select(condlist, choicelist, 0)
-    d_uncapped = D_fixed + d_roll * D_n_dice
-    d = np.minimum(d_uncapped, W)
+
+    # Number of dice is either 0 or 1
+    D_n_dice_clean = np.minimum(D_dice_size.fillna(0),1)
+    d_roll = (
+        D_dice_size
+        .map({3:np.array([1,2,3]), 6:np.array([1,2,3,4,5,6]), 0:np.array([0])})
+    )
+
+    d_uncapped_values = D_fixed + d_roll * D_n_dice_clean
+    df_uncapped = pd.DataFrame(dict(d_uncapped=d_uncapped_values, W=W))
+    d_values = df_uncapped.apply(lambda x: np.minimum(x.d_uncapped, x.W), axis=1)
+    d_uncapped = d_uncapped_values.apply(lambda x:np.mean(x))
+    d = d_values.apply(lambda x: np.mean(x))
     df_result = pd.DataFrame(dict(
         d=d, d_uncapped=d_uncapped
     ))
+
+    # Note: doesn't quite match expectations
+    # For 1d3 vs 2W
+    # Expected w to k: 1.33
+    # d_avg: 1.66 -> w to k: 1.2
+    # w_to_k != 1/d_avg - explore!
+    # Likely reason: only considering isolated attacks
+    # For attacks in sequence, damage cap may lower -> d_avg will lower
+    # Would need model for d_avg for seq of attacks
+
     return df_result
 
 

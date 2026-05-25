@@ -166,6 +166,11 @@ class TestCombatRules(unittest.TestCase):
         self.assertEqual(list(result.columns), ['net_bonus', 'H_mod', 'prob_h', 'prob_ch'])
         log_info('get_prob_h', result)
 
+        # Test hit modifiers
+        df_atk_matrics_hmod = self.df_atk_matrix.assign(bonus_hit=-1, crit_h=5)
+        result = get_prob_h(**df_atk_matrics_hmod)
+        log_info('get_prob_h', result)
+
     def test_get_prob_w(self):
         result = get_prob_w(**self.df_atk_matrix)
         self.assertEqual(len(result), len(self.df_atk_matrix))

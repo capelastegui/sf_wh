@@ -154,19 +154,20 @@ def get_prob_h(H, rr_hit, bonus_hit, minus_hit, crit_h, **kwargs):
         .pipe(np.maximum, -1)
     )
     H_mod = (
-        (H + net_bonus)
+        (H - net_bonus)
         # Ensure modified hit roll is within [2, 6]
         .pipe(np.minimum, 6)
         .pipe(np.maximum, 2)
     )
     prob_h = (
-        ((7 - H) / 6)
+        ((7 - H_mod) / 6)
         # If unmodified H is 1 (i.e. torrent weapon) then prob = 1.0
         .mask(H == 1, 1.)
     )
     prob_ch = (
         ((7 - crit_h) / 6)
         .mask(crit_h.isna() | (crit_h >= 7), 0.)
+        .pipe(np.minimum, prob_h)
     )
     # TODO: Add rr_hit
 

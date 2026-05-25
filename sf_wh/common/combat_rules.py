@@ -126,7 +126,7 @@ def get_df_atk_report(df_atk_matrix, *args):
 
 def get_a_blast(blast, n_models, **kwargs):
     """Get number of extra attacks from Blast ability"""
-    a_blast = blast * (n_models % 5)
+    a_blast = blast * (n_models // 5)
     return pd.Series(a_blast, name='a_blast').fillna(0)
 
 

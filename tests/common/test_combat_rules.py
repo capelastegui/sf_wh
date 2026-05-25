@@ -145,8 +145,9 @@ class TestCombatRules(unittest.TestCase):
         log_info('normalized df', df_result)
 
     def test_get_a_blast(self):
-        result = get_a_blast(**self.df_atk_matrix)
+        result = get_a_blast(**self.df_atk_matrix.assign(blast=1, n_models=5))
         self.assertEqual(len(result), len(self.df_atk_matrix))
+        self.assertEqual(result.min(), 1)
         log_info('get_a_blast', result)
 
 
